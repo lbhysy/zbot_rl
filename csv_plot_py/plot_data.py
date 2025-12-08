@@ -40,9 +40,9 @@ def plot_motor_data_comparison(rx_csv_file, strategy_csv_file):
         time_strategy = df_strategy['timestamp'] - df_strategy['timestamp'].iloc[0]
         
         # 创建三张大图：IMU四元数、电机位置、电机速度
-        fig_imu = plt.figure(figsize=(15, 16))
-        fig_pos = plt.figure(figsize=(15, 20))
-        fig_vel = plt.figure(figsize=(15, 20))
+        fig_imu = plt.figure(figsize=(50, 16))
+        fig_pos = plt.figure(figsize=(50, 20))
+        fig_vel = plt.figure(figsize=(50, 20))
         
         # 设置大标题
         base_title = f'RX vs Strategy\nRX File: {os.path.basename(rx_csv_file)} | Strategy File: {os.path.basename(strategy_csv_file)}'
@@ -254,34 +254,77 @@ def plot_motor_data_comparison(rx_csv_file, strategy_csv_file):
         print("\n" + "="*60)
         print("图片保存选项")
         print("="*60)
-        
+
         save_choice = input("是否保存三张图片？(y/n): ").lower()
         if save_choice == 'y':
-            # 保存IMU图
-            imu_picture_path = input("请输入IMU图保存文件名（或直接回车使用默认文件名）: ").strip()
-            if not imu_picture_path:
-                base_name = os.path.basename(rx_csv_file).split('.')[0]
-                imu_picture_path = f"imu_comparison_{base_name}.png"
-            fig_imu.savefig(imu_picture_path, dpi=300, bbox_inches='tight')
-            print(f"IMU四元数对比图已保存为: {imu_picture_path}")
+            # 固定保存文件夹
+            save_folder = "../figures_data/figures"
+            os.makedirs(save_folder, exist_ok=True)
             
-            # 保存位置图
-            pos_picture_path = input("请输入位置图保存文件名（或直接回车使用默认文件名）: ").strip()
-            if not pos_picture_path:
-                base_name = os.path.basename(rx_csv_file).split('.')[0]
-                pos_picture_path = f"motor_position_comparison_{base_name}.png"
-            fig_pos.savefig(pos_picture_path, dpi=300, bbox_inches='tight')
-            print(f"位置对比图已保存为: {pos_picture_path}")
+            print(f"\n图片将保存到: {save_folder}")
+            print("只需输入文件名，无需输入完整路径（会自动添加.png扩展名）\n")
             
-            # 保存速度图
-            vel_picture_path = input("请输入速度图保存文件名（或直接回车使用默认文件名）: ").strip()
-            if not vel_picture_path:
-                base_name = os.path.basename(rx_csv_file).split('.')[0]
-                vel_picture_path = f"motor_velocity_comparison_{base_name}.png"
-            fig_vel.savefig(vel_picture_path, dpi=300, bbox_inches='tight')
-            print(f"速度对比图已保存为: {vel_picture_path}")
+            # 询问文件名
+            imu_name = input("请输入IMU图文件名: ").strip()
+            pos_name = input("请输入位置图文件名: ").strip()
+            vel_name = input("请输入速度图文件名: ").strip()
+            
+            # 确保有文件名
+            base = os.path.basename(rx_csv_file).split('.')[0]
+            
+            imu_name = imu_name if imu_name else f"imu_comparison_{base}"
+            pos_name = pos_name if pos_name else f"pos_comparison_{base}"
+            vel_name = vel_name if vel_name else f"vel_comparison_{base}"
+            
+            # 添加扩展名
+            for name in [imu_name, pos_name, vel_name]:
+                if not name.lower().endswith('.png'):
+                    name += '.png'
+            
+            # 构建完整路径
+            imu_path = os.path.join(save_folder, imu_name)
+            pos_path = os.path.join(save_folder, pos_name)
+            vel_path = os.path.join(save_folder, vel_name)
+            
+            # 保存
+            fig_imu.savefig(imu_path, dpi=300, bbox_inches='tight')
+            fig_pos.savefig(pos_path, dpi=300, bbox_inches='tight')
+            fig_vel.savefig(vel_path, dpi=300, bbox_inches='tight')
+            
+            print(f"\n保存完成！")
+            print(f"IMU图: {imu_path}")
+            print(f"位置图: {pos_path}")
+            print(f"速度图: {vel_path}")
         else:
             print("跳过保存图片")
+        
+        # save_choice = input("是否保存三张图片？(y/n): ").lower()
+        # if save_choice == 'y':
+        #     # 保存IMU图
+        #     imu_picture_path = input("请输入IMU图保存文件名（或直接回车使用默认文件名）: ").strip()
+        #     if not imu_picture_path:
+        #         base_name = os.path.basename(rx_csv_file).split('.')[0]
+        #         imu_picture_path = f"imu_comparison_{base_name}.png"
+        #     fig_imu.savefig(imu_picture_path, dpi=300, bbox_inches='tight')
+        #     print(f"IMU四元数对比图已保存为: {imu_picture_path}")
+            
+        #     # 保存位置图
+        #     pos_picture_path = input("请输入位置图保存文件名（或直接回车使用默认文件名）: ").strip()
+        #     if not pos_picture_path:
+        #         base_name = os.path.basename(rx_csv_file).split('.')[0]
+        #         pos_picture_path = f"motor_position_comparison_{base_name}.png"
+        #     fig_pos.savefig(pos_picture_path, dpi=300, bbox_inches='tight')
+        #     print(f"位置对比图已保存为: {pos_picture_path}")
+            
+        #     # 保存速度图
+        #     vel_picture_path = input("请输入速度图保存文件名（或直接回车使用默认文件名）: ").strip()
+        #     if not vel_picture_path:
+        #         base_name = os.path.basename(rx_csv_file).split('.')[0]
+        #         vel_picture_path = f"motor_velocity_comparison_{base_name}.png"
+        #     fig_vel.savefig(vel_picture_path, dpi=300, bbox_inches='tight')
+        #     print(f"速度对比图已保存为: {vel_picture_path}")
+        # else:
+        #     print("跳过保存图片")
         
         # 显示图片
         print("\n显示IMU四元数对比图...")
@@ -319,11 +362,11 @@ def main():
     
     # 设置默认文件名
     if not rx_file_path:
-        rx_file_path = "/home/rain/Zbot/Project/Proj1205_test_libtorch/csv_plot_py/1206_real_qpv04_p20d2.csv"  # 默认文件名
+        rx_file_path = "../figures_data/data/1206_real_qpv04_p20d2.csv"  # 读取文件路径
         print(f"使用默认RX数据文件: {rx_file_path}")
     
     if not strategy_file_path:
-        strategy_file_path = "/home/rain/Zbot/Project/Proj1205_test_libtorch/csv_plot_py/obs_env0_quat_pos_vel.csv"  # 默认文件名
+        strategy_file_path = "../figures_data/data/obs_env0_quat_pos_vel.csv"  # 读取文件路径
         print(f"使用默认Strategy数据文件: {strategy_file_path}")
     
     # 运行对比绘图函数

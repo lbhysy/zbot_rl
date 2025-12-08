@@ -340,7 +340,7 @@ void Tangair_usb2can::Strategy_thread()
     const std::chrono::milliseconds period(20); // 50Hz
     LogFrame log_strategy_data;
 
-    csv_data = loadCSV_invec("/home/rain/Zbot/Project/Proj1205_test_libtorch/csv_plot_py/obs_env0.csv");
+    csv_data = loadCSV_invec("../figures_data/data/obs_env0.csv");
     csv_index = 0;
 
     while (running_)
@@ -470,7 +470,7 @@ void Tangair_usb2can::Strategy_thread()
 // 日志线程
 void Tangair_usb2can::Log_thread() {
     // ================== 在这里修改存储路径 ==================
-    std::string log_path = "/home/rain/Zbot/Project/Proj1205_test_libtorch/csv_plot_py/";
+    std::string log_path = "../figures_data/data/";
     
     // 确保路径以斜杠结尾
     if (!log_path.empty() && log_path.back() != '/') {
@@ -480,21 +480,10 @@ void Tangair_usb2can::Log_thread() {
     using namespace std::chrono;
     auto start_time = steady_clock::now();
     int file_index = 0;
-    std::ofstream rx_file, strategy_file;
+    std::ofstream strategy_file;
 
-    auto openNewFiles = [&](int index) {
-        if (rx_file.is_open()) rx_file.close();
+    auto openNewFile = [&](int index) {
         if (strategy_file.is_open()) strategy_file.close();
-
-        // 使用 log_path 变量
-        std::string rx_filename = log_path + "log_rx_" + std::to_string(index) + ".csv";
-        rx_file.open(rx_filename, std::ios::out);
-        if (!rx_file.is_open()) {
-            std::cerr << "无法打开文件: " << rx_filename << std::endl;
-            return;
-        }
-        // 修改表头：四元数在前
-        rx_file << "timestamp,imu_w,imu_x,imu_y,imu_z,pos1,pos2,pos3,pos4,pos5,pos6,vel1,vel2,vel3,vel4,vel5,vel6\n";
 
         std::string strategy_filename = log_path + "log_strategy_" + std::to_string(index) + ".csv";
         strategy_file.open(strategy_filename, std::ios::out);
@@ -502,30 +491,20 @@ void Tangair_usb2can::Log_thread() {
             std::cerr << "无法打开文件: " << strategy_filename << std::endl;
             return;
         }
-        // 修改表头：四元数在前
+        // 表头：四元数在前
         strategy_file << "timestamp,imu_w,imu_x,imu_y,imu_z,pos1,pos2,pos3,pos4,pos5,pos6,vel1,vel2,vel3,vel4,vel5,vel6\n";
         
-        std::cout << "创建日志文件: " << rx_filename << " 和 " << strategy_filename << std::endl;
+        std::cout << "创建日志文件: " << strategy_filename << std::endl;
     };
 
-    openNewFiles(file_index);
+    openNewFile(file_index);
 
     while (running_) {
         auto now = steady_clock::now();
         if (duration_cast<seconds>(now - start_time).count() >= 100) {
             file_index++;
-            openNewFiles(file_index);
+            openNewFile(file_index);
             start_time = now;
-        }
-
-        // 批量收集 RX 队列数据
-        std::vector<LogFrame> rx_batch;
-        {
-            std::lock_guard<std::mutex> lock(mutex_log_rx_queue);
-            while (!log_rx_queue.empty()) {
-                rx_batch.push_back(log_rx_queue.front());
-                log_rx_queue.pop();
-            }
         }
 
         // 批量收集策略队列数据
@@ -536,34 +515,6 @@ void Tangair_usb2can::Log_thread() {
                 strategy_batch.push_back(log_strategy_queue.front());
                 log_strategy_queue.pop();
             }
-        }
-
-        // 批量写入 RX 日志
-        if (!rx_batch.empty() && rx_file.is_open()) {
-            for (auto &entry : rx_batch) {
-                rx_file << std::fixed << std::setprecision(6) << entry.timestamp << ",";
-                
-                // 先写入 IMU 四元数 (w,x,y,z)
-                for (int i = 0; i < 4; ++i) {
-                    rx_file << entry.imu_quat[i] << ",";
-                }
-                
-                // 再写入电机位置
-                for (int i = 0; i < 6; ++i) {
-                    rx_file << entry.motor_pos[i] << ",";
-                }
-                
-                // 最后写入电机速度（最后一个不加逗号）
-                for (int i = 0; i < 6; ++i) {
-                    rx_file << entry.motor_vel[i];
-                    if (i < 5) {
-                        rx_file << ",";
-                    } else {
-                        rx_file << "\n";
-                    }
-                }
-            }
-            rx_file.flush();  // 确保数据写入磁盘
         }
 
         // 批量写入策略日志
@@ -595,12 +546,11 @@ void Tangair_usb2can::Log_thread() {
         }
 
         // 队列为空则短暂休眠
-        if (rx_batch.empty() && strategy_batch.empty()) {
+        if (strategy_batch.empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
 
-    if (rx_file.is_open()) rx_file.close();
     if (strategy_file.is_open()) strategy_file.close();
     
     std::cout << "日志线程结束，文件保存路径: " << log_path << std::endl;
