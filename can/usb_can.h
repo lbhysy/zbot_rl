@@ -1,5 +1,5 @@
-// # Copyright (c) 2023-2025 TANGAIR 
-// # SPDX-License-Identifier: Apache-2.0
+#ifndef __usb_can__
+#define __usb_can__
 
 #include <stdint.h>
 
@@ -31,7 +31,5 @@ int32_t readUSBCAN(int32_t dev, uint8_t *channel, FrameInfo* info, uint8_t *data
 }
 #endif
 
+#endif
 
-
-// # Copyright (c) 2023-2025 TANGAIR 
-// # SPDX-License-Identifier: Apache-2.0

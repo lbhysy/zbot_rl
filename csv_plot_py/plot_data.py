@@ -362,11 +362,11 @@ def main():
     
     # 设置默认文件名
     if not rx_file_path:
-        rx_file_path = "../figures_data/data/1206_real_qpv04_p20d2.csv"  # 读取文件路径
+        rx_file_path = "../figures_data/data/log_strategy_0.csv"  # 读取文件路径
         print(f"使用默认RX数据文件: {rx_file_path}")
     
     if not strategy_file_path:
-        strategy_file_path = "../figures_data/data/obs_env0_quat_pos_vel.csv"  # 读取文件路径
+        strategy_file_path = "../figures_data/data/obs_env0_quat_pos_vel_25hz.csv"  # 读取文件路径
         print(f"使用默认Strategy数据文件: {strategy_file_path}")
     
     # 运行对比绘图函数
